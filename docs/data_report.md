@@ -46,76 +46,55 @@ Missing measurements are left blank by Meteostat and therefore appear as empty c
 2. From the repo root, run `python -m code.fetch_meteostat_weather --start-date YYYY-MM-DD --end-date YYYY-MM-DD --combine`.
 3. Inspect `data/raw/` for fresh CSVs and review the INFO/Warning log output for coverage issues.
 
-## NASA POWER Data Integration
+## Source 2 – NASA POWER Gap Fill
 
-To address missing values in the Meteostat dataset, NASA POWER API data has been integrated as a secondary source.
+- **Source:** [NASA POWER Daily Point API](https://power.larc.nasa.gov/) via `code/fetch_nasa_power.py`.
+- **Usage:**
+  ```powershell
+  python -m code.fetch_nasa_power --start-date 2018-01-01 --end-date 2025-11-15 --combine
+  ```
+- **Outputs:** `data/raw/nasa_power_<location>_YYYY-MM-DD_YYYY-MM-DD.csv` plus `data/raw/nasa_power_combined.csv` (5,752 rows for the 2018-01-01→2025-11-15 window).
+- **Parameters collected:** `T2M`, `T2M_MIN`, `T2M_MAX`, `PRECTOTCORR`, `WS2M`, `WS2M_MAX`, `RH2M`, `PS`, `ALLSKY_SFC_SW_DWN`.
+- **Unit normalization:** the dataset builder converts NASA wind speeds from m/s → km/h and surface pressure from kPa → hPa to align with Meteostat.
 
-### Fetching NASA POWER Data
+NASA rows are merged with Meteostat by (`date`, `location_key`) so that any blank Meteostat fields can be backfilled with NASA values while preserving the higher-quality station readings where available.
 
-```bash
-python -m code.fetch_nasa_power --combine
-```
+## Source 3 – NDMA Flood Reports
 
-This fetches the following parameters from NASA POWER:
-- Temperature (T2M, T2M_MIN, T2M_MAX)
-- Precipitation (PRECTOTCORR)
-- Wind speed (WS2M, WS2M_MAX)
-- Humidity (RH2M) - **Not available in Meteostat**
-- Pressure (PS)
-- Solar radiation (ALLSKY_SFC_SW_DWN) - **Not available in Meteostat**
+- **Source:** NDMA Situation Reports (SITREP) and GLOF advisories published via ReliefWeb/NDMA portal.
+- **Storage:** `data/raw/ndma_flood_reports.csv` with columns:
+  - `date`, `location_key`, `flood_event` (binary label), `flood_severity`, `damages_inr_crore`, `warnings`, `source_url`, `notes`.
+- **Current coverage:** Positive flood labels for key 2022–2024 events affecting Swat and Upper Dir (e.g., SitRep #089 on 27-Aug-2022). Additional rows can be appended as more reports are transcribed.
+- **Labeling rule:** For days not present in the CSV, the pipeline assumes `flood_event = 0`.
 
-### Merging Datasets
+## Final Training Dataset
 
-The `merge_weather_data.py` script combines Meteostat and NASA POWER data:
+- **Builder:** `python -m code.build_training_dataset --start-date 2018-01-01 --end-date 2025-11-15`.
+- **Inputs:** Meteostat combined CSV, NASA POWER combined CSV, NDMA flood report CSV.
+- **Output:** `data/processed/flood_weather_dataset.csv` (5,752 rows, two per date – one per district) with the feature/label schema required for modeling.
+- **Feature handling:**
+  - Meteostat columns (`tavg`, `tmin`, `tmax`, `prcp`, `wspd`, `wpgt`, `pres`, `snow`, `tsun`) are preferred; missing entries fall back to NASA counterparts where available.
+  - NASA-only metrics `humidity` and `solar_radiation` are appended.
+  - `location_key` is integer-encoded into `location_id` (Swat=0, Upper Dir=1, auto-extends for additional districts).
+  - NDMA metadata (`flood_severity`, `damages_inr_crore`, `warnings`, `source_url`, `notes`) accompany the binary `flood_event` label.
 
-```bash
-python -m code.merge_weather_data
-```
-
-**Merge Strategy:**
-1. Meteostat data is used as the primary source
-2. Missing values in Meteostat are filled with NASA POWER data
-3. Humidity and solar radiation columns are added from NASA POWER
-
-**Results:**
-- **Before merge:** 26-28% missing values in key weather features
-- **After merge:** 0% missing values for tavg, tmin, tmax, prcp, wspd, wpgt, pres
-- **Added columns:** humidity, solar_radiation
-- **Output:** `data/processed/weather_merged.csv` (3,914 rows × 18 columns)
-
-| Column              | Missing Before | Missing After | Filled |
-| ------------------- | -------------- | ------------- | ------ |
-| tavg                | 1,047 (26.8%)  | 0 (0%)        | 100%   |
-| tmin                | 1,080 (27.6%)  | 0 (0%)        | 100%   |
-| tmax                | 1,047 (26.8%)  | 0 (0%)        | 100%   |
-| prcp                | 1,063 (27.2%)  | 0 (0%)        | 100%   |
-| wspd                | 1,109 (28.3%)  | 0 (0%)        | 100%   |
-| wpgt                | 3,914 (100%)   | 0 (0%)        | 100%   |
-| pres                | 1,115 (28.5%)  | 0 (0%)        | 100%   |
-| humidity (new)      | N/A            | 0 (0%)        | N/A    |
-| solar_radiation (new) | N/A          | 0 (0%)        | N/A    |
-
-### Final Dataset for ML
-
-The merged dataset (`data/processed/weather_merged.csv`) is ready for machine learning with:
-
-**Input Features (X):**
-- date
-- tavg, tmin, tmax (temperature in °C)
-- prcp (rainfall in mm)
-- snow (snowfall in mm - mostly missing)
-- wspd, wpgt (wind speed and gust in km/h)
-- pres (pressure in hPa)
-- humidity (relative humidity in %, from NASA)
-- solar_radiation (solar radiation in W/m², from NASA)
-- location (encoded as location_key)
-
-**Output (y) - To be added:**
-- flood_event (0/1) - Manual labeling from NDMA reports required
+| Column                                                                                 | Description                                                                      |
+| -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `date`                                                                                 | Observation day (UTC ISO date).                                                  |
+| `location_key`, `location_id`, `location_name`, `latitude`, `longitude`, `elevation_m` | Spatial metadata / encoded key.                                                  |
+| `tavg`, `tmin`, `tmax`                                                                 | Temperature metrics in °C after gap filling.                                     |
+| `prcp`, `snow`                                                                         | Precipitation & snowfall depth (mm).                                             |
+| `wspd`, `wpgt`                                                                         | Wind speed / gust in km/h (NASA data converted from m/s when used).              |
+| `pres`                                                                                 | Surface pressure in hPa (NASA data converted from kPa when used).                |
+| `tsun`                                                                                 | Sunshine duration in minutes (Meteostat only).                                   |
+| `humidity`                                                                             | Relative humidity (%) from NASA POWER.                                           |
+| `solar_radiation`                                                                      | Daily all-sky surface shortwave downward radiation (kWh/m²/day) from NASA POWER. |
+| `flood_event`                                                                          | Target label (1 if NDMA reported flooding, else 0).                              |
+| `flood_severity`, `damages_inr_crore`, `warnings`, `source_url`, `notes`               | NDMA context for auditing/interpretability.                                      |
 
 ## Next Steps
 
-- **Label flood events:** Use NDMA reports to create flood_event target variable (1 if flood reported, 0 otherwise)
+- Expand NDMA labeling to cover additional districts/seasons and to include "no flood" confirmations if available.
 - Pull additional Meteostat stations nearer to flood-prone tehsils if higher spatial resolution is required.
-- Enrich files with location-specific columns (e.g., district code, population) to support modeling.
-- Train ML model using the merged dataset with complete weather features.
+- Enrich files with auxiliary socio-economic indicators (population density, river discharge, GLOF catalogues) for downstream models.
+- Automate a QA notebook in `notebooks/` to visualize coverage, missingness, and label distribution before training.
