@@ -164,6 +164,22 @@ python -m code.fetch_nasa_power --locations swat --combine
 - Added humidity and solar radiation columns
 - Ready for machine learning
 
+## Testing
+
+Run the integration test to verify the data merge functionality:
+
+```bash
+python tests/test_merge_integration.py
+```
+
+The test verifies:
+- All required data files exist
+- Merged data has the expected structure
+- No missing values in key features
+- Data values are within reasonable ranges
+- Row counts match between source and merged data
+- Original Meteostat data is preserved where available
+
 ## Next Steps
 
 1. ✅ Collect and merge weather data
