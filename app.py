@@ -184,8 +184,14 @@ def predict_flood_risk(model_data, features):
         return 0.1, "No model available"
     
     try:
-        model = model_data.get('model', model_data)
-        threshold = model_data.get('threshold', 0.5)
+        # Handle both dict format and direct model object
+        if isinstance(model_data, dict):
+            model = model_data.get('model', model_data)
+            threshold = model_data.get('threshold', 0.5)
+        else:
+            # model_data is the model itself
+            model = model_data
+            threshold = 0.5
         
         # Get prediction probability
         if hasattr(model, 'predict_proba'):
