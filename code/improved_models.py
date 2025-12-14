@@ -215,14 +215,16 @@ class ImprovedFloodModels:
         return self.results
     
     def get_best_model(self):
-        """Return the best performing model based on F1 score"""
+        """Return the best performing model based on Recall (for flood detection, catching floods is critical)"""
         if not self.results:
             raise ValueError("No models evaluated yet.")
         
-        best_name = max(self.results.keys(), key=lambda k: self.results[k]['f1'])
+        # For flood detection, we prioritize RECALL (catching actual floods) over precision
+        # A missed flood is much worse than a false alarm
+        best_name = max(self.results.keys(), key=lambda k: self.results[k]['recall'])
         best_result = self.results[best_name]
         
-        print(f"\n🏆 Best Model: {best_name} (F1: {best_result['f1']:.4f})")
+        print(f"\n🏆 Best Model: {best_name} (Recall: {best_result['recall']:.4f}, F1: {best_result['f1']:.4f})")
         return best_name, best_result
     
     def save_best_model(self, filename='best_flood_model.pkl'):

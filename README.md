@@ -1,363 +1,520 @@
-# AI-Based Natural Disaster Prediction Web App
+# 🌊 AI-Based Natural Disaster Prediction Web App
 
-An AI-powered web application for predicting natural disasters (specifically floods) in Pakistan using historical weather data and machine learning.
+[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://python.org)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.28+-red.svg)](https://streamlit.io)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-## Overview
+An AI-powered web application for predicting floods in Khyber Pakhtunkhwa, Pakistan using machine learning and multiple AI techniques.
 
-This project collects and processes weather data from multiple sources to train machine learning models for flood prediction in high-risk districts of Pakistan (Swat and Upper Dir).
+---
 
-## Features
+## 📋 Table of Contents
 
-- **Multi-Source Weather Data Collection**
-  - Meteostat API integration for historical weather data
-  - NASA POWER API integration for satellite-derived meteorological data
-  - Automatic data merging to fill missing values
+- [Overview](#-overview)
+- [Features](#-features)
+- [AI Techniques Implemented](#-ai-techniques-implemented)
+- [Installation](#-installation)
+- [How to Run](#️-how-to-run)
+- [Project Structure](#-project-structure)
+- [How It Works](#️-how-it-works)
+- [Dataset](#-dataset)
+- [Model Performance](#-model-performance)
+- [API Keys](#-api-keys)
+- [Docker Deployment](#-docker-deployment)
+- [Technologies Used](#️-technologies-used)
 
-- **Comprehensive Weather Features**
-  - Temperature (average, min, max)
-  - Precipitation and snowfall
-  - Wind speed and gusts
-  - Atmospheric pressure
-  - Humidity (from NASA POWER)
-  - Solar radiation (from NASA POWER)
+---
 
-- **Advanced Data Processing Pipeline**
-  - Automated data fetching and preprocessing
-  - Missing value imputation using NASA POWER data
-  - Feature engineering (19 engineered features)
-  - Data validation and quality checks
-  - StandardScaler normalization
+## 🎯 Overview
 
-- **Machine Learning Models** ✅ **COMPLETED**
-  - **Logistic Regression** (Accuracy: 99.91%, AUC-ROC: 0.8243)
-  - **Random Forest** (Accuracy: 99.91%, AUC-ROC: 0.8643) ⭐ Best Model
-  - Cross-validation & evaluation
-  - Model serialization (.pkl files)
+This project is a comprehensive **AI-based flood prediction system** for high-risk districts in Pakistan (Swat and Upper Dir). It combines:
 
-- **Model Evaluation & Visualization**
-  - Performance metrics (Accuracy, Precision, Recall, F1, AUC-ROC)
-  - ROC curves with AUC scores
-  - Confusion matrices
-  - Feature importance rankings
-  - Comprehensive evaluation reports
+- **Real-time weather data** from OpenWeatherMap API
+- **Historical weather data** from NASA POWER and Meteostat (2000-2025)
+- **Machine learning models** trained on 18,902 weather observations
+- **Multiple AI techniques** including Search Algorithms, CSP, Neural Networks, Clustering, and Reinforcement Learning
 
-## Installation
+### Why This Project?
 
-1. Clone the repository:
+Pakistan faces devastating floods every year, especially during monsoon season. This system aims to:
+
+- Predict flood risk based on weather conditions
+- Help authorities make informed evacuation decisions
+- Provide early warnings to save lives
+
+---
+
+## ✨ Features
+
+### Main Application Features
+
+| Feature                  | Description                                           |
+| ------------------------ | ----------------------------------------------------- |
+| 🏠 **Dashboard**         | Real-time flood risk prediction with weather data     |
+| 🔮 **Custom Prediction** | Enter manual weather parameters for prediction        |
+| 📊 **Historical Data**   | Explore 25 years of weather and flood data            |
+| 🤖 **Model Info**        | View model performance metrics and feature importance |
+| ℹ️ **About**             | Project documentation and credits                     |
+
+### AI Techniques (Interactive Demos)
+
+| Technique                     | Application                                 |
+| ----------------------------- | ------------------------------------------- |
+| 🔍 **Search Algorithms**      | A\*, BFS, DFS for evacuation route planning |
+| 🧩 **CSP**                    | Resource allocation for emergency response  |
+| 🧬 **Neural Network**         | LSTM for time-series flood prediction       |
+| 📈 **K-Means Clustering**     | Weather pattern analysis                    |
+| 🎮 **Reinforcement Learning** | Q-Learning for evacuation decisions         |
+| 🔬 **SHAP/LIME**              | Model explainability                        |
+
+---
+
+## 🧠 AI Techniques Implemented
+
+### 1. Search Algorithms (Week 8)
+
+**File:** `code/search_algorithms.py`
+
+Finds optimal evacuation routes from flooded areas to safe zones.
+
+```python
+# Algorithms implemented:
+- A* Search (informed, optimal)
+- Breadth-First Search (optimal for unweighted)
+- Depth-First Search (memory efficient)
+```
+
+**How it works:** Creates a grid-based flood scenario where some cells are flooded (obstacles). The algorithms find the shortest path from a start position to the nearest safe zone.
+
+---
+
+### 2. Constraint Satisfaction Problem (Week 9)
+
+**File:** `code/csp_resource_allocation.py`
+
+Allocates emergency resources (medical teams, rescue boats, supplies) to evacuation shelters.
+
+```python
+# Techniques used:
+- AC-3 Arc Consistency (preprocessing)
+- Backtracking Search
+- MRV Heuristic (Minimum Remaining Values)
+- LCV Heuristic (Least Constraining Value)
+```
+
+**How it works:** Given shelters with different populations and resource requirements, and limited resources, finds an optimal allocation that satisfies all constraints.
+
+---
+
+### 3. LSTM Neural Network (Week 11)
+
+**File:** `code/neural_network.py`
+
+Time-series prediction using Long Short-Term Memory networks.
+
+```
+Architecture:
+Input (7 days × 5 features) → LSTM (64 units) → Dense (1, sigmoid)
+```
+
+**How it works:** Looks at the past 7 days of weather data to predict if a flood will occur. The LSTM can capture patterns like gradual rainfall buildup.
+
+---
+
+### 4. K-Means Clustering (Week 12)
+
+**File:** `code/clustering.py`
+
+Groups weather conditions into risk categories.
+
+```
+Clusters identified:
+- Monsoon Pattern (HIGH RISK)
+- Flash Flood Conditions (HIGH RISK)
+- Moderate Rain (MODERATE RISK)
+- Dry Conditions (LOW RISK)
+```
+
+**How it works:** Uses K-Means++ initialization to group similar weather patterns. Automatically labels clusters based on their characteristics.
+
+---
+
+### 5. Q-Learning / Reinforcement Learning (Week 12)
+
+**File:** `code/reinforcement_learning.py`
+
+Learns optimal evacuation decisions through trial and error.
+
+```
+Environment:
+- States: (flood_level, population_at_risk, resources, time)
+- Actions: Wait, Warn, Voluntary Evac, Mandatory Evac, Deploy Resources
+- Rewards: +100/person saved, -500/casualty
+```
+
+**How it works:** Simulates thousands of flood scenarios. The agent learns when to issue warnings, start evacuations, and deploy resources to maximize lives saved.
+
+---
+
+### 6. SHAP & LIME Explainability (Bonus)
+
+**File:** `code/explainability.py`
+
+Explains why the model made a specific prediction.
+
+```
+Example output:
+"Flood risk is 85% because:
+ - Heavy rainfall (+40%)
+ - High humidity (+25%)
+ - Monsoon season (+15%)"
+```
+
+---
+
+## 🚀 Installation
+
+### Prerequisites
+
+- Python 3.9 or higher
+- pip (Python package manager)
+- Git
+
+### Step 1: Clone the Repository
+
 ```bash
 git clone https://github.com/zohaibkhan745/-AI-Based-Natural-Disaster-Prediction-Web-App-.git
 cd -AI-Based-Natural-Disaster-Prediction-Web-App-
 ```
 
-2. Create a virtual environment:
+### Step 2: Create Virtual Environment
+
+**Windows:**
+
 ```bash
 python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+.venv\Scripts\activate
 ```
 
-3. Install dependencies:
+**Linux/Mac:**
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+### Step 3: Install Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
-## Usage
+### Step 4: Set Up API Key (Optional but Recommended)
 
-### Quick Start - Complete ML Pipeline
+Create `.streamlit/secrets.toml`:
 
-Run the entire data preprocessing + model training + evaluation pipeline:
+```toml
+OPENWEATHER_API_KEY = "your_api_key_here"
+```
+
+Get a free API key from [OpenWeatherMap](https://openweathermap.org/api).
+
+---
+
+## ▶️ How to Run
+
+### Option 1: Run the Web App (Recommended)
+
 ```bash
-python3 run_pipeline.py
+streamlit run app.py
 ```
 
-This executes:
-1. ✅ Data Preprocessing (feature engineering, scaling)
-2. ✅ Model Training (Logistic Regression + Random Forest)
-3. ✅ Model Evaluation (metrics, visualizations)
+Then open your browser to `http://localhost:8501`
 
-### Test Model Predictions
+### Option 2: Run with Docker
 
-Verify that your models are working and making predictions:
 ```bash
-python3 test_model.py
+docker-compose up --build
 ```
 
-Comprehensive model prediction verification:
+### Option 3: Run Individual Components
+
+| Command                        | Description                   |
+| ------------------------------ | ----------------------------- |
+| `streamlit run app.py`         | Start web application         |
+| `python run_pipeline.py`       | Run full ML training pipeline |
+| `python test_model.py`         | Test model predictions        |
+| `python verify_predictions.py` | Verify model outputs          |
+
+### Run AI Technique Demos
+
 ```bash
-python3 verify_predictions.py
+# Search Algorithms Demo
+python code/search_algorithms.py
+
+# CSP Demo
+python code/csp_resource_allocation.py
+
+# Neural Network Demo
+python code/neural_network.py
+
+# Clustering Demo
+python code/clustering.py
+
+# Reinforcement Learning Demo
+python code/reinforcement_learning.py
+
+# Explainability Demo
+python code/explainability.py
 ```
 
-### Step-by-Step Data Collection (Legacy)
+---
 
-1. **Fetch Meteostat Data:**
-```bash
-python -m code.fetch_meteostat_weather --combine
-```
-
-2. **Fetch NASA POWER Data:**
-```bash
-python -m code.fetch_nasa_power --combine
-```
-
-3. **Merge Datasets:**
-```bash
-python -m code.merge_weather_data
-```
-
-### Run Individual Components
-
-**Data Preprocessing Only:**
-```bash
-python3 code/preprocessing.py
-```
-
-**Model Training Only:**
-```bash
-python3 code/baseline_models.py
-```
-
-**Model Evaluation Only:**
-```bash
-python3 code/model_evaluation.py
-```
-
-### Custom Date Ranges
-
-Fetch data for specific time periods:
-```bash
-python -m code.fetch_meteostat_weather --start-date 2020-01-01 --end-date 2020-12-31 --combine
-python -m code.fetch_nasa_power --start-date 2020-01-01 --end-date 2020-12-31 --combine
-python -m code.merge_weather_data
-```
-
-### Single Location
-
-Fetch data for a specific location:
-```bash
-python -m code.fetch_meteostat_weather --locations swat --combine
-python -m code.fetch_nasa_power --locations swat --combine
-```
-
-## Data Sources
-
-### 1. Meteostat (Primary Source)
-- **API:** https://meteostat.net/
-- **Coverage:** 2018-01-01 to present
-- **Features:** Temperature, precipitation, wind, pressure, sunshine
-- **Issue:** 26-28% missing values
-
-### 2. NASA POWER (Secondary Source)
-- **API:** https://power.larc.nasa.gov/
-- **Coverage:** Complete coverage for requested dates
-- **Features:** Temperature, precipitation, wind, pressure, humidity, solar radiation
-- **Purpose:** Fill missing Meteostat values and add new features
-
-### 3. NDMA Reports (Planned)
-- **Source:** National Disaster Management Authority
-- **Purpose:** Label flood events for supervised learning
-- **Status:** Manual labeling required
-
-## Project Structure
+## 📁 Project Structure
 
 ```
-.
-├── code/
-│   ├── __init__.py
-│   ├── preprocessing.py              # Data cleaning & feature engineering ✅
-│   ├── baseline_models.py            # ML model training ✅
-│   ├── model_evaluation.py           # Model evaluation & visualizations ✅
-│   ├── fetch_meteostat_weather.py    # Fetch Meteostat data
-│   ├── fetch_nasa_power.py           # Fetch NASA POWER data
-│   ├── merge_weather_data.py         # Merge datasets
-│   └── ... (other modules)
-├── data/
-│   ├── raw/                          # Raw data from APIs
-│   └── processed/                    # Processed datasets
-├── docs/
-│   ├── data_report.md                # Data collection report
-│   └── data_merge_guide.md           # Merging guide
-├── notebooks/
-│   └── ml_pipeline.ipynb             # Interactive ML pipeline ✅
-├── examples/
-│   └── complete_data_pipeline.py     # Full pipeline example
-├── results/                          # ML model outputs ✅
-│   ├── logistic_regression_model.pkl
-│   ├── random_forest_model.pkl
-│   ├── training_data.csv
-│   ├── test_data.csv
-│   ├── model_metrics.csv
-│   ├── *.png                         # Visualizations
-│   └── evaluation_report.txt
-├── tests/
-│   └── test_merge_integration.py     # Integration tests
-├── run_pipeline.py                   # Main orchestration script ✅
-├── test_model.py                     # Model testing ✅
-├── verify_predictions.py             # Prediction verification ✅
-├── requirements.txt                  # Python dependencies
-├── ENVIRONMENT_SETUP.md              # Setup guide
-├── ML_PIPELINE_README.md             # ML pipeline documentation
-├── XGBOOST_ERROR_RESOLUTION.md       # XGBoost fix documentation
-└── README.md                         # This file
+AI-Based-Natural-Disaster/
+│
+├── 📱 app.py                          # Main Streamlit web application
+│
+├── 📂 code/                           # Source code modules
+│   ├── search_algorithms.py           # A*, BFS, DFS (Week 8)
+│   ├── csp_resource_allocation.py     # CSP (Week 9)
+│   ├── neural_network.py              # LSTM (Week 11)
+│   ├── clustering.py                  # K-Means (Week 12)
+│   ├── reinforcement_learning.py      # Q-Learning (Week 12)
+│   ├── explainability.py              # SHAP/LIME (Bonus)
+│   ├── improved_models.py             # ML model training
+│   ├── preprocessing.py               # Data preprocessing
+│   ├── baseline_models.py             # Baseline ML models
+│   ├── model_evaluation.py            # Evaluation metrics
+│   ├── fetch_nasa_power.py            # NASA POWER API
+│   ├── fetch_meteostat_weather.py     # Meteostat API
+│   ├── merge_weather_data.py          # Data merging
+│   └── label_historical_floods.py     # Flood labeling
+│
+├── 📂 data/
+│   ├── raw/                           # Raw API data
+│   │   ├── nasa_power_*.csv
+│   │   ├── weather_*.csv
+│   │   └── ndma_flood_reports.csv
+│   └── processed/                     # Cleaned datasets
+│       ├── flood_weather_dataset.csv  # Main training data (18,902 records)
+│       ├── cleaned_swat.csv
+│       └── cleaned_upper_dir.csv
+│
+├── 📂 results/                        # Model outputs
+│   ├── best_flood_model.pkl           # Trained model
+│   ├── model_metrics.csv              # Performance metrics
+│   ├── feature_importance.json        # Feature rankings
+│   └── evaluation_report.txt          # Detailed report
+│
+├── 📂 docs/                           # Documentation
+├── 📂 notebooks/                      # Jupyter notebooks
+├── 📂 .streamlit/                     # Streamlit config
+├── 📂 .github/workflows/              # CI/CD
+│
+├── 🐳 Dockerfile                      # Docker config
+├── 🐳 docker-compose.yml              # Docker Compose
+├── 📋 requirements.txt                # Python dependencies
+├── 📖 README.md                       # This file
+└── 📖 AI_TECHNIQUES_SUMMARY.md        # AI techniques documentation
 ```
 
-## Data Pipeline
+---
+
+## ⚙️ How It Works
+
+### Data Pipeline
 
 ```
-┌─────────────────┐     ┌──────────────────┐
-│ Meteostat API  │     │ NASA POWER API   │
-│  (Primary)      │     │  (Secondary)     │
-└────────┬────────┘     └────────┬─────────┘
-         │                       │
-         ▼                       ▼
-┌─────────────────────────────────────────┐
-│  Merge & Fill Missing Values            │
-│  - Use Meteostat as primary             │
-│  - Fill gaps with NASA POWER            │
-│  - Add humidity & solar radiation       │
-└─────────────────┬───────────────────────┘
-                  │
-                  ▼
-┌─────────────────────────────────────────┐
-│  Complete Weather Dataset               │
-│  - 0% missing values                    │
-│  - 18 features                          │
-│  - Ready for ML                         │
-└─────────────────────────────────────────┘
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   NASA POWER    │────▶│   Data Merge    │────▶│   Preprocessing │
+│   (2000-2025)   │     │   & Cleaning    │     │   24 Features   │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+         │                                              │
+         │              ┌─────────────────┐            ▼
+         └─────────────▶│   Fill Missing  │     ┌─────────────────┐
+                        │   Values        │     │   ML Training   │
+┌─────────────────┐     └─────────────────┘     │   (3 Models)    │
+│   Meteostat     │────────────────────────────▶└─────────────────┘
+│   (2018-2025)   │                                    │
+└─────────────────┘                                    ▼
+                                                ┌─────────────────┐
+┌─────────────────┐                             │   Best Model    │
+│   NDMA Reports  │────▶ Flood Labels ─────────▶│   (60% Recall)  │
+│   + Historical  │      (517 events)           └─────────────────┘
+└─────────────────┘
 ```
 
-## Data Quality
+### Prediction Flow
 
-### Before Merge (Meteostat Only)
-- 3,914 rows
-- 26-28% missing values in key features
-- No humidity or solar radiation data
+```
+User Input          ──▶  Feature Engineering  ──▶  Model Prediction
+(Weather Data)           (24 features)             (Flood Probability)
+                                                          │
+                                                          ▼
+                                                   Risk Assessment
+                                                   LOW / MODERATE / HIGH
+```
 
-### After Merge
-- 3,914 rows
-- **0% missing values** for all key features
-- Added humidity and solar radiation columns
-- Ready for machine learning
+### 24 Engineered Features
 
-## Model Performance
+| Category          | Features                                                                    |
+| ----------------- | --------------------------------------------------------------------------- |
+| **Temperature**   | tavg, tmin, tmax, temp_range, tavg_7day_avg                                 |
+| **Precipitation** | prcp, prcp_7day_avg, prcp_3day_sum, prcp_7day_sum, heavy_rain, extreme_rain |
+| **Atmospheric**   | pres, humidity, pressure_anomaly, high_humidity                             |
+| **Wind**          | wspd, wpgt, wspd_7day_avg                                                   |
+| **Solar**         | solar_radiation                                                             |
+| **Temporal**      | month, day_of_year, quarter, is_monsoon                                     |
+| **Location**      | location_encoded                                                            |
 
-### Data Preprocessing Results
-- **Dataset:** 5,752 samples from Swat & Upper Dir districts
-- **Features Engineered:** 19 features (temperature, precipitation, wind, pressure, humidity, solar radiation, temporal, rolling averages)
-- **Train/Test Split:** 80/20 stratified (4,601 training / 1,151 test samples)
-- **Scaling:** StandardScaler normalization applied
+---
+
+## 📊 Dataset
+
+### Statistics
+
+| Metric            | Value                          |
+| ----------------- | ------------------------------ |
+| **Total Records** | 18,902                         |
+| **Time Range**    | January 2000 - November 2025   |
+| **Flood Events**  | 517 (2.74%)                    |
+| **Features**      | 24 engineered                  |
+| **Locations**     | Swat, Upper Dir (KP, Pakistan) |
+
+### Data Sources
+
+1. **NASA POWER API** - Satellite-derived meteorological data (2000-2025)
+2. **Meteostat API** - Ground station weather data (2018-2025)
+3. **NDMA Reports** - Historical flood event records
+4. **Historical Archives** - Major flood events database
+
+---
+
+## 📈 Model Performance
+
+### Best Model: Logistic Regression (Class Weighted)
+
+| Metric        | Score  |
+| ------------- | ------ |
+| **Recall**    | 60% ⭐ |
+| **Precision** | 45%    |
+| **F1 Score**  | 51%    |
+| **Accuracy**  | 97%    |
+
+### Why Recall Matters
+
+In flood prediction, **missing a real flood is worse than a false alarm**:
+
+- ✅ 60% of actual floods are detected
+- ⚠️ Some false alarms (acceptable trade-off for safety)
 
 ### Model Comparison
 
-| Model | Accuracy | Precision | Recall | F1-Score | AUC-ROC | Status |
-|-------|----------|-----------|--------|----------|---------|--------|
-| **Logistic Regression** | 99.91% | 0.0000 | 0.0000 | 0.0000 | **0.8243** | ✅ Working |
-| **Random Forest** | 99.91% | 0.0000 | 0.0000 | 0.0000 | **0.8643** | ✅ **Best** |
+| Model                   | Recall  | Precision | F1  |
+| ----------------------- | ------- | --------- | --- |
+| **Logistic Regression** | **60%** | 45%       | 51% |
+| Random Forest           | 53%     | 52%       | 52% |
+| Gradient Boosting       | 43%     | 58%       | 49% |
 
-### Model Features
-- ✅ Trained on 4,601 samples
-- ✅ Evaluated on 1,151 test samples
-- ✅ Cross-validation applied (5-fold for LR)
-- ✅ Models serialized and saved (.pkl files)
-- ✅ Ready for real-time predictions
+---
 
-### Generated Outputs
-```
-results/
-├── training_data.csv                          (1.7 MB - Preprocessed training data)
-├── test_data.csv                              (428 KB - Preprocessed test data)
-├── logistic_regression_model.pkl              (873 B - Trained LR model)
-├── random_forest_model.pkl                    (406 KB - Trained RF model)
-├── model_metrics.csv                          (Performance metrics)
-├── model_performance_comparison.png           (Bar charts)
-├── roc_curves.png                             (ROC curves with AUC)
-├── confusion_matrices.png                     (Confusion matrices)
-├── feature_importance_logistic_regression.csv
-├── feature_importance_random_forest.csv
-├── feature_importance_logistic_regression.png
-├── feature_importance_random_forest.png
-├── feature_importance.json
-├── evaluation_report.txt                      (Detailed analysis)
-└── prediction_verification_report.png         (Verification visualizations)
+## 🔑 API Keys
+
+### OpenWeatherMap (For Real-time Weather)
+
+1. Sign up at [OpenWeatherMap](https://openweathermap.org/api)
+2. Get your free API key
+3. Create `.streamlit/secrets.toml`:
+
+```toml
+OPENWEATHER_API_KEY = "your_api_key_here"
 ```
 
-## Testing
+**Without API key:** The app uses demo/simulated weather data.
 
-### Model Testing Scripts ✅
+---
 
-1. **Quick Model Test:**
+## 🐳 Docker Deployment
+
+### Using Docker Compose (Recommended)
+
 ```bash
-python3 test_model.py
+docker-compose up --build
 ```
-- Tests both models on 1,151 test samples
-- Displays accuracy and AUC-ROC scores
-- Shows sample predictions
 
-2. **Comprehensive Prediction Verification (14-Step Procedure):**
+### Manual Docker Build
+
 ```bash
-python3 verify_predictions.py
-```
-- Verifies model files exist
-- Tests predictions on all test samples
-- Compares model performance
-- Tests on random samples
-- Generates visualizations
-- Creates verification report
+# Build the image
+docker build -t flood-prediction-app .
 
-3. **Data Merge Integration Test:**
-```bash
-python tests/test_merge_integration.py
+# Run the container
+docker run -p 8501:8501 flood-prediction-app
 ```
 
-The tests verify:
-- All model files are loadable
-- Predictions can be made successfully
-- Performance metrics are calculated correctly
-- Data values are within reasonable ranges
-- Models work on new unseen data
+Access the app at `http://localhost:8501`
 
-## Next Steps
+---
 
-1. ✅ Collect and merge weather data
-2. ✅ Preprocess data (feature engineering, scaling)
-3. ✅ Train baseline ML models (Logistic Regression, Random Forest)
-4. ✅ Evaluate models with comprehensive metrics
-5. ✅ Verify model predictions working correctly
-6. ⏳ Build web application (Flask/Streamlit) for predictions
-7. ⏳ Integrate real-time weather API
-8. ⏳ Deploy the application (Heroku/AWS/GCP)
-9. ⏳ Set up model monitoring and retraining pipeline
-10. ⏳ Implement advanced features (SMOTE for class imbalance, hyperparameter tuning)
+## 🛠️ Technologies Used
 
-## Documentation
+| Category            | Technologies                          |
+| ------------------- | ------------------------------------- |
+| **Frontend**        | Streamlit, Plotly                     |
+| **ML/AI**           | scikit-learn, NumPy, Pandas           |
+| **Neural Network**  | Custom LSTM implementation            |
+| **APIs**            | OpenWeatherMap, NASA POWER, Meteostat |
+| **Deployment**      | Docker, GitHub Actions                |
+| **Version Control** | Git, GitHub                           |
 
-- [ML Pipeline README](ML_PIPELINE_README.md) - Complete ML pipeline documentation
-- [Environment Setup Guide](ENVIRONMENT_SETUP.md) - Virtual environment setup instructions
-- [XGBoost Error Resolution](XGBOOST_ERROR_RESOLUTION.md) - Troubleshooting guide
-- [Data Collection Report](docs/data_report.md) - Detailed information about data sources
-- [Data Merge Guide](docs/data_merge_guide.md) - Step-by-step merging instructions
+---
 
-## Requirements
+## 📚 Requirements
 
-- Python 3.8+
-- pandas
-- numpy
-- requests
-- meteostat
-- beautifulsoup4
-- lxml
-- geopy
+```
+streamlit>=1.28.0
+pandas>=2.0.0
+numpy>=1.24.0
+scikit-learn>=1.3.0
+plotly>=5.18.0
+requests>=2.31.0
+python-dateutil>=2.8.2
+```
 
-See [requirements.txt](requirements.txt) for complete list.
+Full list in `requirements.txt`
 
-## Contributing
+---
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+## 👨‍💻 Author
 
-## License
+**CS351 - Artificial Intelligence Project**  
+Semester 5
 
-This project is part of an AI-based natural disaster prediction system for Pakistan.
+---
 
-## Acknowledgments
+## ⚠️ Disclaimer
 
-- Meteostat for providing historical weather data
-- NASA POWER for satellite-derived meteorological data
-- NDMA for disaster event reports
+This is an **educational project** demonstrating AI techniques for disaster prediction. For actual emergency situations, please refer to:
+
+- [NDMA Pakistan](https://ndma.gov.pk/)
+- [PMD Pakistan](https://www.pmd.gov.pk/)
+- Local emergency services
+
+---
+
+## 🙏 Acknowledgments
+
+- NASA POWER for satellite data
+- Meteostat for weather data
+- NDMA Pakistan for flood reports
+- Streamlit for the web framework
+- scikit-learn for ML tools
+
+---
+
+<p align="center">
+  Made with ❤️ for CS351 - Artificial Intelligence
+</p>

@@ -81,6 +81,27 @@ class DataPreprocessor:
         print("🧹 HANDLING MISSING VALUES")
         print("="*60)
         
+        # First, merge Meteostat and NASA data (they cover different time periods)
+        # Meteostat: 2018-2025, NASA POWER: 2000-2017
+        nasa_mapping = {
+            'tavg': 'nasa_tavg',
+            'tmin': 'nasa_tmin', 
+            'tmax': 'nasa_tmax',
+            'prcp': 'nasa_prcp',
+            'wspd': 'nasa_wspd',
+            'wpgt': 'nasa_wpgt',
+            'pres': 'nasa_pres'
+        }
+        
+        print("🔀 Merging Meteostat and NASA POWER data...")
+        for meteo_col, nasa_col in nasa_mapping.items():
+            if meteo_col in self.df.columns and nasa_col in self.df.columns:
+                # Fill Meteostat missing values with NASA data
+                before_missing = self.df[meteo_col].isnull().sum()
+                self.df[meteo_col] = self.df[meteo_col].fillna(self.df[nasa_col])
+                after_missing = self.df[meteo_col].isnull().sum()
+                print(f"   {meteo_col}: {before_missing} → {after_missing} missing (filled {before_missing - after_missing})")
+        
         # Fill NaN values in weather features with forward fill then backward fill
         weather_cols = ['tavg', 'tmin', 'tmax', 'prcp', 'snow', 'wspd', 'wpgt', 'pres', 'tsun', 'humidity', 'solar_radiation']
         
@@ -88,7 +109,7 @@ class DataPreprocessor:
             if col in self.df.columns:
                 # Group by location to avoid data leakage between regions
                 self.df[col] = self.df.groupby('location_key')[col].transform(
-                    lambda x: x.fillna(method='ffill').fillna(method='bfill')
+                    lambda x: x.ffill().bfill()
                 )
                 # Fill remaining NaN with median by location
                 self.df[col] = self.df.groupby('location_key')[col].transform(
@@ -112,6 +133,9 @@ class DataPreprocessor:
         self.df['day_of_year'] = self.df['date'].dt.dayofyear
         self.df['quarter'] = self.df['date'].dt.quarter
         
+        # Monsoon season flag (June-September is peak flood season in Pakistan)
+        self.df['is_monsoon'] = self.df['month'].isin([6, 7, 8, 9]).astype(int)
+        
         # Temperature-based features
         if 'tmax' in self.df.columns and 'tmin' in self.df.columns:
             self.df['temp_range'] = self.df['tmax'] - self.df['tmin']
@@ -132,14 +156,30 @@ class DataPreprocessor:
                     lambda x: x.rolling(window=7, min_periods=1).mean()
                 )
         
+        # CRITICAL: Cumulative precipitation (floods often from multi-day rain)
+        if 'prcp' in self.df.columns:
+            # 3-day cumulative precipitation
+            self.df['prcp_3day_sum'] = self.df.groupby('location_key')['prcp'].transform(
+                lambda x: x.rolling(window=3, min_periods=1).sum()
+            )
+            # 7-day cumulative precipitation
+            self.df['prcp_7day_sum'] = self.df.groupby('location_key')['prcp'].transform(
+                lambda x: x.rolling(window=7, min_periods=1).sum()
+            )
+            # Heavy rain flag (above 10mm in a day)
+            self.df['heavy_rain'] = (self.df['prcp'] > 10).astype(int)
+            # Extreme rain flag (above 50mm in a day)
+            self.df['extreme_rain'] = (self.df['prcp'] > 50).astype(int)
+        
         # Location encoding
         location_map = {loc: idx for idx, loc in enumerate(self.df['location_key'].unique())}
         self.df['location_encoded'] = self.df['location_key'].map(location_map)
         
         print("✅ Features engineered!")
         print(f"   New feature count: {self.df.shape[1]}")
-        print(f"   New features: month, day_of_year, quarter, temp_range, high_humidity,")
-        print(f"                pressure_anomaly, prcp_7day_avg, tavg_7day_avg, wspd_7day_avg, location_encoded")
+        print(f"   New features: month, day_of_year, quarter, is_monsoon, temp_range, high_humidity,")
+        print(f"                pressure_anomaly, prcp_7day_avg, prcp_3day_sum, prcp_7day_sum,")
+        print(f"                heavy_rain, extreme_rain, tavg_7day_avg, wspd_7day_avg, location_encoded")
     
     def select_features(self):
         """Select relevant features for modeling"""
@@ -147,11 +187,12 @@ class DataPreprocessor:
         print("🎯 FEATURE SELECTION")
         print("="*60)
         
-        # Features to use in the model
+        # Features to use in the model (including new cumulative features)
         feature_columns = [
             'tavg', 'tmin', 'tmax', 'prcp', 'wspd', 'wpgt', 'pres', 'humidity', 'solar_radiation',
-            'month', 'day_of_year', 'quarter', 'temp_range', 'high_humidity',
-            'pressure_anomaly', 'prcp_7day_avg', 'tavg_7day_avg', 'wspd_7day_avg', 'location_encoded'
+            'month', 'day_of_year', 'quarter', 'is_monsoon', 'temp_range', 'high_humidity',
+            'pressure_anomaly', 'prcp_7day_avg', 'prcp_3day_sum', 'prcp_7day_sum',
+            'heavy_rain', 'extreme_rain', 'tavg_7day_avg', 'wspd_7day_avg', 'location_encoded'
         ]
         
         # Filter only existing columns
