@@ -1,0 +1,14 @@
+{
+  "Logistic Regression (Balanced)": {
+    "f1_optimal": 0.8476114444216073,
+    "best_f1": 0.37125748076427983
+  },
+  "Random Forest (Balanced)": {
+    "f1_optimal": 0.8439806250938341,
+    "best_f1": 0.4435483822401795
+  },
+  "Gradient Boosting (Calibrated)": {
+    "f1_optimal": 0.3217893217893218,
+    "best_f1": 0.4808743120188719
+  }
+}

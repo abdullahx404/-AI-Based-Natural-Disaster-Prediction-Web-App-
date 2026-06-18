@@ -1,0 +1,7 @@
+date,location_key,flood_event,flood_severity,damages_inr_crore,warnings,source_url,notes
+2022-08-27,swat,1,Severe,15.2,"Red alert issued for Swat River; evacuations ordered in Mingora.",https://reliefweb.int/report/pakistan/ndma-monsoon-sitrep-089-27-august-2022,"NDMA SitRep #089 indicates widespread flooding and infrastructure damage across Swat."
+2022-08-27,upper_dir,1,Severe,6.8,"Upper Dir district administration issued high-flood warning.",https://reliefweb.int/report/pakistan/ndma-monsoon-sitrep-089-27-august-2022,"Flash floods damaged multiple link roads and irrigation channels."
+2022-09-02,swat,1,High,8.3,"Additional breaches reported near Bahrain tehsil; travel discouraged.",https://reliefweb.int/report/pakistan/ndma-monsoon-sitrep-095-02-september-2022,"Follow-up SitRep #095 confirms continuing inundation." 
+2023-07-10,upper_dir,1,Moderate,1.9,"Monsoon spell triggers localized flooding; NDMA urges vigilance.",https://reliefweb.int/report/pakistan/ndma-monsoon-sitrep-030-10-july-2023,"Localized flooding along Panjkora River." 
+2024-04-18,swat,1,Moderate,0.6,"Glacial lake outburst warning for upstream valleys.",https://reliefweb.int/report/pakistan/ndma-situation-report-glof-18-april-2024,"Proactive evacuation orders prevent casualties." 
+2024-08-22,upper_dir,1,High,3.4,"High-flow alert for Dir Kohistan streams.",https://reliefweb.int/report/pakistan/ndma-monsoon-sitrep-082-22-august-2024,"Multiple suspension bridges damaged." 

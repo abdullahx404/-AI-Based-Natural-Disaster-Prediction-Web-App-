@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # Main application service
+  flood-prediction-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flood-prediction
+    ports:
+      - "8501:8501"
+    environment:
+      - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY:-demo}
+    volumes:
+      - ./results:/app/results:ro
+      - ./data:/app/data:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Development service with hot reload
+  flood-prediction-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flood-prediction-dev
+    ports:
+      - "8502:8501"
+    environment:
+      - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY:-demo}
+    volumes:
+      - .:/app
+    command: streamlit run app.py --server.port=8501 --server.address=0.0.0.0 --server.runOnSave=true
+    profiles:
+      - dev
+
+  # ML training service
+  ml-training:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ml-training
+    volumes:
+      - ./data:/app/data
+      - ./results:/app/results
+      - ./code:/app/code
+    command: python train_improved_models.py
+    profiles:
+      - training
